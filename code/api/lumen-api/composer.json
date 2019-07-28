@@ -6,7 +6,10 @@
     "type": "project",
     "require": {
         "php": ">=7.1.3",
-        "laravel/lumen-framework": "5.8.*"
+        "firebase/php-jwt": "^5.0",
+        "laravel/lumen-framework": "5.8.*",
+        "maxsky/lumen-app-key-generator": "^1.0",
+        "tymon/jwt-auth": "^1.0.0-rc.3"
     },
     "require-dev": {
         "fzaninotto/faker": "^1.4",
