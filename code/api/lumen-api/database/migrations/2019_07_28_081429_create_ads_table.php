@@ -19,8 +19,8 @@ class CreateAdsTable extends Migration
             $table->string('name');
             $table->string('brand');
             $table->double('price');
-            $table->binary('img');
-            $table->string('description');
+            $table->binary('img')->nullable();
+            $table->longText('description')->nullable();
             $table->unsignedBigInteger('id_user');
             $table->timestamps();
 
