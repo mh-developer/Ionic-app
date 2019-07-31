@@ -11,18 +11,32 @@
 |
 */
 
+// $router->get('/', function () use ($router) {
+//     return $router->app->version();
+// });
 
-$router->post('auth/login', 'AuthController@userAuthenticate');
+$router->get('/', 'AdController@index');
 
-$router->group(['middleware' => 'jwt.auth'],
-    function() use ($router) {
-        $router->get('/', function () use ($router) {
-            return $router->app->version();
-        });
+/**
+ * Ad routs
+ */
+$router->get   ('ads'    , 'AdController@index');
+$router->get   ('ad/{id}', 'AdController@show');
+$router->patch ('ad/{id}', 'AdController@update');
+$router->post  ('ad'     , 'AdController@create');
+$router->delete('ad/{id}', 'AdController@destroy');
 
-        $router->get('users', function() {
-            $users = \App\User::all();
-            return response()->json($users);
-        });
-    }
-);
+
+/**
+ * Auth routs
+ */
+$router->group([
+    // 'middleware' => 'api',
+    'prefix' => 'auth'
+], function() use ($router) {
+    $router->post('register', 'AuthController@register');
+    $router->post('login'   , 'AuthController@login');
+    $router->post('logout'  , 'AuthController@logout');
+    $router->post('refresh' , 'AuthController@refresh');
+    $router->post('me'      , 'AuthController@me');
+});

@@ -21,6 +21,9 @@ class CreateAdsTable extends Migration
             $table->double('price');
             $table->binary('img')->nullable();
             $table->longText('description')->nullable();
+            $table->string('tag')->nullable();
+            $table->dateTime('create_at');
+            $table->dateTime('end_at');
             $table->unsignedBigInteger('id_user');
             $table->timestamps();
 

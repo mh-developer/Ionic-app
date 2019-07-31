@@ -2,87 +2,100 @@
 
 namespace App\Http\Controllers;
 
-use Validator;
-use App\User;
-use Firebase\JWT\JWT;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Firebase\JWT\ExpiredException;
-use Illuminate\Support\Facades\Hash;
-use Laravel\Lumen\Routing\Controller as BaseController;
+use App\User;
 
-class AuthController extends BaseController
+class AuthController extends Controller
 {
     /**
-     * The request instance.
+     * Create a new AuthController instance.
      *
-     * @var \Illuminate\Http\Request
-     */
-    private $request;
-
-    /**
-     * Create a new controller instance.
-     *
-     * @param  \Illuminate\Http\Request  $request
      * @return void
      */
-    public function __construct(Request $request) {
-        $this->request = $request;
+    public function __construct()
+    {
+        $this->middleware('auth:api', ['except' => ['login','register']]);
+    }
+
+    public function register(Request $request)
+    {
+        $user = User::create([
+            'name'     => $request->name,
+            'email'    => $request->email,
+            'password' => app('hash')->make($request->password, ['rounds' => 12]),
+         ]);
+
+        $token = Auth::login($user);
+
+        return $this->respondWithToken($token);
     }
 
     /**
-     * Create a new token.
+     * Get a JWT via given credentials.
      *
-     * @param  \App\User   $user
-     * @return string
+     * @return \Illuminate\Http\JsonResponse
      */
-    protected function jwt(User $user) {
-        $payload = [
-            'iss' => "lumen-jwt", // Issuer of the token
-            'sub' => $user->id, // Subject of the token
-            'iat' => time(), // Time when JWT was issued.
-            'exp' => time() + 60*60 // Expiration time
-        ];
+    public function login(Request $request)
+    {
 
-        // As you can see we are passing `JWT_SECRET` as the second parameter that will
-        // be used to decode the token in the future.
-        return JWT::encode($payload, env('JWT_SECRET'));
+      // return response()->json(['message' => 'Successfully logged in']);
+        $credentials = $request->only(['email', 'password']);
+
+        if (! $token = Auth::attempt($credentials)) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        return $this->respondWithToken($token);
     }
 
     /**
-     * Authenticate a user and return the token if the provided credentials are correct.
+     * Get the authenticated User.
      *
-     * @param  \App\User   $user
-     * @return mixed
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function userAuthenticate(User $user) {
-        $this->validate($this->request, [
-            'email'     => 'required|email',
-            'password'  => 'required'
-        ]);
+    public function me()
+    {
+        return response()->json(Auth::user());
+    }
 
-        // Find the user by email
-        $user = User::where('email', $this->request->input('email'))->first();
+    /**
+     * Log the user out (Invalidate the token).
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function logout()
+    {
+        Auth::logout();
 
-        if (!$user) {
-            // You wil probably have some sort of helpers or whatever
-            // to make sure that you have the same response format for
-            // differents kind of responses. But let's return the
-            // below respose for now.
-            return response()->json([
-                'error' => 'Email does not exist.'
-            ], 400);
-        }
+        return response()->json(['message' => 'Successfully logged out']);
+    }
 
-        // Verify the password and generate the token
-        if (Hash::check($this->request->input('password'), $user->password)) {
-            return response()->json([
-                'token' => $this->jwt($user)
-            ], 200);
-        }
+    /**
+     * Refresh a token.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function refresh()
+    {
+        return $this->respondWithToken(auth()->refresh());
+    }
 
-        // Bad Request response
+    /**
+     * Get the token array structure.
+     *
+     * @param  string $token
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    protected function respondWithToken($token)
+    {
         return response()->json([
-            'error' => 'Email or password is wrong.'
-        ], 400);
+            'access_token' => $token,
+            'token_type' => 'bearer',
+            'expires_in' => Auth::factory()->getTTL() * 60
+        ]);
     }
+
 }
