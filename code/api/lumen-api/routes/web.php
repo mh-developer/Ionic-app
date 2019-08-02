@@ -18,17 +18,17 @@
 $router->get('/', 'AdController@index');
 
 /**
- * Ad routs
+ * Ad routers
  */
 $router->get   ('ads'    , 'AdController@index');
 $router->get   ('ad/{id}', 'AdController@show');
-$router->patch ('ad/{id}', 'AdController@update');
 $router->post  ('ad'     , 'AdController@create');
+$router->patch ('ad/{id}', 'AdController@update');
 $router->delete('ad/{id}', 'AdController@destroy');
 
 
 /**
- * Auth routs
+ * Auth routers
  */
 $router->group([
     // 'middleware' => 'api',
